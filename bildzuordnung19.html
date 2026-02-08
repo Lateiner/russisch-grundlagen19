@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visuelle Übung: ПРО- vs. ПЕРЕ-</title>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-hover: #303f9f;
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px; /* Breiter für das Grid */
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #666;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- RESPONSIVE GRID LAYOUT --- */
+        .visual-grid {
+            display: grid;
+            /* 
+               Der Kern der Responsivität: 
+               Erzeugt so viele Spalten wie möglich, die mindestens 280px breit sind.
+               Auf Handys wird es 1 Spalte, auf Tablets 2, auf Desktops 3.
+            */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        /* --- CARD DESIGN --- */
+        .visual-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 20px;
+            display: flex;
+            flex-direction: column; /* Stapelt Inhalt vertikal */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .visual-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- EMOJI SZENE --- */
+        .scene {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            font-size: 3.5rem; /* Große Emojis */
+            text-align: center;
+            border: 2px dashed #e0e0e0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .description {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+            min-height: 3em; /* Sorgt für gleichmäßige Höhe bei unterschiedlichem Text */
+        }
+
+        /* --- BUTTONS IN DER KARTE --- */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: auto; /* Drückt Buttons ans untere Ende */
+        }
+
+        .btn-option {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s, transform 0.1s;
+            font-weight: bold;
+        }
+
+        .btn-option:active {
+            transform: scale(0.98);
+        }
+
+        /* Feedback Zustände */
+        .btn-option.correct {
+            background-color: var(--correct) !important;
+            pointer-events: none; /* Deaktiviert Klick */
+            position: relative;
+        }
+        
+        .btn-option.correct::after {
+            content: " ✔";
+        }
+
+        .btn-option.wrong {
+            background-color: var(--wrong) !important;
+            opacity: 0.6;
+        }
+
+        .btn-option.disabled {
+            background-color: #ccc;
+            pointer-events: none;
+        }
+
+        /* --- STEUERUNG (UNTEN) --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .btn-control {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            min-width: 150px;
+        }
+
+        .btn-reset { background-color: #757575; }
+        .btn-reset:hover { background-color: #616161; }
+
+        .btn-solve { background-color: #009688; }
+        .btn-solve:hover { background-color: #00796b; }
+
+        /* --- MOBILE OPTIMIERUNG --- */
+        @media (max-width: 600px) {
+            .scene { font-size: 2.5rem; gap: 10px; }
+            .visual-grid { grid-template-columns: 1fr; } /* Streng 1 Spalte auf Handy */
+            .controls { flex-direction: column; }
+            .btn-control { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👀 Visuelles Verständnis: ПРО- oder ПЕРЕ-?</h1>
+    <p class="instruction">Schau dir die Emojis genau an. Bewegt sich das Subjekt <strong>vorbei/hindurch</strong> (про-) oder <strong>überquert/wechselt</strong> es etwas (пере-)?</p>
+
+    <div class="visual-grid" id="grid">
+
+        <!-- Szenario 1: Vorbeifahren -->
+        <div class="visual-card">
+            <div class="scene">🏛️ 🚗💨</div>
+            <div class="description">Das Auto fährt an der Bank vorbei (ohne anzuhalten).</div>
+            <div class="options-grid">
+                <button class="btn-option" onclick="selectAnswer(this, true)">проехать</button>
+                <button class="btn-option" onclick="selectAnswer(this, false)">переехать</button>
+            </div>
+        </div>
+
+        <!-- Szenario 2: Überqueren -->
+        <div class="visual-card">
+            <div class="scene">🚶 🦓 🚦</div>
+            <div class="description">Der Fußgänger überquert den Zebrastreifen.</div>
+            <div class="options-grid">
+                <button class="btn-option" onclick="selectAnswer(this, false)">пройти</button>
+                <button class="btn-option" onclick="selectAnswer(this, true)">перейти</button>
+            </div>
+        </div>
+
+        <!-- Szenario 3: Umziehen -->
+        <div class="visual-card">
+            <div class="scene">🏠 🚚 🏢</div>
+            <div class="description">Die Familie zieht vom Haus in eine Wohnung um.</div>
+            <div class="options-grid">
+                <button class="btn-option" onclick="selectAnswer(this, true)">переехать</button>
+                <button class="btn-option" onclick="selectAnswer(this, false)">проехать</button>
+            </div>
+        </div>
+
+        <!-- Szenario 4: Durchqueren -->
+        <div class="visual-card">
+            <div class="scene">🌲 🚶 🌲</div>
+            <div class="description">Wir gehen durch den dichten Wald.</div>
+            <div class="options-grid">
+                <button class="btn-option" onclick="selectAnswer(this, false)">перейти</button>
+                <button class="btn-option" onclick="selectAnswer(this, true)">пройти</button>
+            </div>
+        </div>
+
+        <!-- Szenario 5: Brücke -->
+        <div class="visual-card">
+            <div class="scene">🌊 🌉 🚗</div>
+            <div class="description">Das Auto fährt über die Brücke (über den Fluss).</div>
+            <div class="options-grid">
+                <button class="btn-option" onclick="selectAnswer(this, false)">проехать</button>
+                <button class="btn-option" onclick="selectAnswer(this, true)">переехать</button>
+            </div>
+        </div>
+
+        <!-- Szenario 6: Distanz -->
+        <div class="visual-card">
+            <div class="scene">🏃 📏 5km</div>
+            <div class="description">Er ist heute 5 Kilometer gelaufen.</div>
+            <div class="options-grid">
+                <button class="btn-option" onclick="selectAnswer(this, true)">прошёл</button>
+                <button class="btn-option" onclick="selectAnswer(this, false)">перешёл</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-control btn-reset" onclick="resetAll()">Alle zurücksetzen</button>
+        <button class="btn-control btn-solve" onclick="solveAll()">Lösung anzeigen</button>
+    </div>
+</div>
+
+<script>
+    /**
+     * Behandelt den Klick auf eine Antwortoption.
+     * @param {HTMLElement} btn - Der geklickte Button.
+     * @param {boolean} isCorrect - Ob die Antwort richtig ist.
+     */
+    function selectAnswer(btn, isCorrect) {
+        // Finde den Container der aktuellen Karte
+        const card = btn.closest('.visual-card');
+        const buttons = card.querySelectorAll('.btn-option');
+
+        if (isCorrect) {
+            // Richtig: Grün markieren
+            btn.classList.add('correct');
+            // Alle Buttons in dieser Karte deaktivieren, damit man nicht weitermachen kann
+            buttons.forEach(b => {
+                if (b !== btn) b.classList.add('disabled');
+            });
+            // Optional: Grüner Rahmen um die Karte
+            card.style.borderColor = "var(--correct)";
+        } else {
+            // Falsch: Rot markieren
+            btn.classList.add('wrong');
+            // Feedback: Kleiner "Shake" Effekt (optional)
+            card.animate([
+                { transform: 'translateX(0)' },
+                { transform: 'translateX(-5px)' },
+                { transform: 'translateX(5px)' },
+                { transform: 'translateX(0)' }
+            ], { duration: 300 });
+        }
+    }
+
+    /**
+     * Setzt alle Karten auf den Anfangszustand zurück.
+     */
+    function resetAll() {
+        const buttons = document.querySelectorAll('.btn-option');
+        const cards = document.querySelectorAll('.visual-card');
+
+        buttons.forEach(btn => {
+            btn.className = 'btn-option'; // Entfernt alle Klassen wie correct, wrong, disabled
+        });
+
+        cards.forEach(card => {
+            card.style.borderColor = "transparent";
+        });
+    }
+
+    /**
+     * Zeigt automatisch die richtige Lösung für alle Karten an.
+     */
+    function solveAll() {
+        // Erst alles zurücksetzen, um Konflikte zu vermeiden
+        resetAll();
+
+        const cards = document.querySelectorAll('.visual-card');
+
+        cards.forEach(card => {
+            const buttons = card.querySelectorAll('.btn-option');
+            buttons.forEach(btn => {
+                // Wir simulieren die Logik: Der Button mit onclick="...true)" ist der richtige
+                // Da wir den Code als String im HTML haben, prüfen wir das Attribut
+                if (btn.getAttribute('onclick').includes('true')) {
+                    btn.classList.add('correct');
+                } else {
+                    btn.classList.add('disabled');
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lückentext: Semantik (ПРО- vs. ПЕРЕ-)</title>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-light: #e8eaf6;
+            --correct: #4caf50;
+            --correct-bg: #e8f5e9;
+            --wrong: #f44336;
+            --wrong-bg: #ffebee;
+            --text: #333;
+            --bg: #f4f4f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- SATZ CONTAINER --- */
+        .sentence-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sentence-item {
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 15px 10px;
+            font-size: 1.2rem; /* Größere Schrift für Lesbarkeit */
+            display: flex;
+            flex-wrap: wrap; /* Wichtig für Mobilgeräte, damit Text umbricht */
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+            border-radius: 8px;
+        }
+
+        .sentence-item:hover {
+            background-color: #fafafa;
+        }
+
+        /* --- DROPDOWN DESIGN --- */
+        select.gap-select {
+            appearance: none; /* Entfernt Standard-Style */
+            -webkit-appearance: none;
+            background-color: var(--primary-light);
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            padding: 5px 15px;
+            font-size: 1.1rem;
+            color: var(--primary);
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            min-width: 80px;
+            transition: all 0.3s;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%233f51b5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px top 50%;
+            background-size: 10px auto;
+            padding-right: 25px; /* Platz für Pfeil */
+        }
+
+        select.gap-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+        }
+
+        /* Feedback Styles */
+        select.correct {
+            border-color: var(--correct);
+            background-color: var(--correct-bg);
+            color: #2e7d32;
+            background-image: none; /* Pfeil weg bei Lösung */
+        }
+
+        select.wrong {
+            border-color: var(--wrong);
+            background-color: var(--wrong-bg);
+            color: #c62828;
+        }
+
+        /* --- HINWEIS TEXT (Kontext) --- */
+        .hint {
+            font-size: 0.9rem;
+            color: #888;
+            margin-left: auto; /* Schiebt Hinweis nach rechts */
+            font-style: italic;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* --- STEUERUNG --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            min-width: 140px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #757575; }
+        .btn-solve { background-color: #009688; }
+        
+        button:hover { opacity: 0.9; }
+
+        /* --- MOBILE ANPASSUNGEN --- */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .sentence-item {
+                font-size: 1.1rem;
+                padding: 15px 5px;
+            }
+            .hint {
+                width: 100%; /* Hinweis auf neue Zeile */
+                margin-top: 5px;
+                margin-left: 0;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Lückentext: Semantik</h1>
+    <p class="instruction">
+        Ergänze das passende Präfix. Achte auf den Kontext (in Klammern).<br>
+        Wähle <strong>ПРО-</strong> (vorbei/durch/Distanz) oder <strong>ПЕРЕ-</strong> (wechseln/überqueren).
+    </p>
+
+    <div class="sentence-list">
+
+        <!-- Satz 1 -->
+        <div class="sentence-item">
+            <span>1. Мы</span>
+            <select class="gap-select" data-solution="пере">
+                <option value="">...</option>
+                <option value="про">про</option>
+                <option value="пере">пере</option>
+            </select>
+            <span>ехали в новую квартиру.</span>
+            <span class="hint">(Umzug)</span>
+        </div>
+
+        <!-- Satz 2 -->
+        <div class="sentence-item">
+            <span>2. Туристы</span>
+            <select class="gap-select" data-solution="про">
+                <option value="">...</option>
+                <option value="про">про</option>
+                <option value="пере">пере</option>
+            </select>
+            <span>шли через тёмный лес.</span>
+            <span class="hint">(Durchqueren)</span>
+        </div>
+
+        <!-- Satz 3 -->
+        <div class="sentence-item">
+            <span>3. Осторожно! Тебе нужно</span>
+            <select class="gap-select" data-solution="пере">
+                <option value="">...</option>
+                <option value="про">про</option>
+                <option value="пере">пере</option>
+            </select>
+            <span>йти улицу.</span>
+            <span class="hint">(Überqueren)</span>
+        </div>
+
+        <!-- Satz 4 -->
+        <div class="sentence-item">
+            <span>4. Вчера я</span>
+            <select class="gap-select" data-solution="про">
+                <option value="">...</option>
+                <option value="про">про</option>
+                <option value="пере">пере</option>
+            </select>
+            <span>ехал мимо твоего дома.</span>
+            <span class="hint">(Vorbeifahren)</span>
+        </div>
+
+        <!-- Satz 5 -->
+        <div class="sentence-item">
+            <span>5. Спортсмен</span>
+            <select class="gap-select" data-solution="про">
+                <option value="">...</option>
+                <option value="про">про</option>
+                <option value="пере">пере</option>
+            </select>
+            <span>бежал 10 километров.</span>
+            <span class="hint">(Distanz)</span>
+        </div>
+
+        <!-- Satz 6 -->
+        <div class="sentence-item">
+            <span>6. Мы</span>
+            <select class="gap-select" data-solution="пере">
+                <option value="">...</option>
+                <option value="про">про</option>
+                <option value="пере">пере</option>
+            </select>
+            <span>шли через мост.</span>
+            <span class="hint">(Brücke überqueren)</span>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-check" onclick="checkAnswers()">Überprüfen</button>
+        <button class="btn-reset" onclick="resetGame()">Zurücksetzen</button>
+        <button class="btn-solve" onclick="solveGame()">Lösung anzeigen</button>
+    </div>
+</div>
+
+<script>
+    function checkAnswers() {
+        const selects = document.querySelectorAll('.gap-select');
+        
+        selects.forEach(select => {
+            // Alte Klassen entfernen
+            select.classList.remove('correct', 'wrong');
+            
+            const userValue = select.value;
+            const correctValue = select.dataset.solution;
+
+            if (userValue === correctValue) {
+                select.classList.add('correct');
+            } else if (userValue !== "") {
+                select.classList.add('wrong');
+            }
+        });
+    }
+
+    function resetGame() {
+        const selects = document.querySelectorAll('.gap-select');
+        selects.forEach(select => {
+            select.value = "";
+            select.classList.remove('correct', 'wrong');
+        });
+    }
+
+    function solveGame() {
+        const selects = document.querySelectorAll('.gap-select');
+        selects.forEach(select => {
+            select.value = select.dataset.solution;
+            select.classList.remove('wrong');
+            select.classList.add('correct');
+        });
+    }
+</script>
+
+</body>
+</html>

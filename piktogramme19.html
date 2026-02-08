@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piktogramm-Matching: ПРО- vs. ПЕРЕ-</title>
+    <!-- WICHTIG: Polyfill für Touch-Geräte (Smartphone/Tablet) -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-hover: #303f9f;
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --bg: #f4f4f9;
+            --zone-bg: #e8eaf6;
+            --card-bg: #ffffff;
+            --text: #333;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+            /* Verhindert "Pull-to-refresh" auf Mobile beim Draggen */
+            overscroll-behavior-y: contain; 
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        /* --- SPIELFELD LAYOUT --- */
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Container für die Symbole (Quelle) */
+        .source-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            min-height: 120px;
+            padding: 20px;
+            background-color: #eee;
+            border-radius: 12px;
+            border: 2px dashed #ccc;
+        }
+
+        /* Bereich für die Ziel-Boxen */
+        .target-area {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+        }
+
+        .drop-zone {
+            flex: 1;
+            background-color: var(--zone-bg);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 15px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .drop-zone h3 {
+            margin-top: 0;
+            color: var(--primary);
+            text-align: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            width: 100%;
+            padding-bottom: 10px;
+        }
+
+        .drop-zone.drag-over {
+            background-color: #c5cae9;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* --- PIKTOGRAMM KARTEN --- */
+        .token {
+            width: 100px;
+            height: 100px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            transition: transform 0.2s;
+            user-select: none;
+            touch-action: none; /* Wichtig für Touch Performance */
+            position: relative;
+        }
+
+        .token:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        .token svg {
+            width: 60px;
+            height: 60px;
+            fill: none;
+            stroke: var(--text);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .token-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* Feedback Farben */
+        .token.correct {
+            border: 3px solid var(--correct);
+            background-color: #e8f5e9;
+        }
+
+        .token.wrong {
+            border: 3px solid var(--wrong);
+            background-color: #ffebee;
+        }
+
+        /* --- STEUERUNG --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #757575; }
+        .btn-solve { background-color: #009688; }
+        
+        button:hover { opacity: 0.9; }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 700px) {
+            .target-area {
+                flex-direction: column; /* Boxen untereinander auf kleinen Screens */
+            }
+            
+            .drop-zone {
+                min-height: 150px; /* Etwas kleiner auf Handy */
+            }
+
+            .token {
+                width: 80px;
+                height: 80px;
+            }
+            .token svg {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Piktogramm-Matching</h1>
+    <p class="instruction">
+        Ordne die Symbole zu: Welches Bild passt zur Bedeutung von <strong>ПРО-</strong> (durch/vorbei) und welches zu <strong>ПЕРЕ-</strong> (über/wechseln)?<br>
+        Ziehe die Symbole in die richtige Box.
+    </p>
+
+    <div class="game-board">
+        
+        <!-- Quelle: Hier liegen die Symbole am Anfang -->
+        <div class="source-container" id="source">
+            
+            <!-- Symbol 1: Durchqueren (Tunnel) -> PRO -->
+            <div class="token" draggable="true" data-prefix="pro">
+                <svg viewBox="0 0 100 100">
+                    <!-- Box -->
+                    <rect x="20" y="20" width="60" height="60" stroke="#888" stroke-dasharray="5,5" />
+                    <!-- Pfeil durch -->
+                    <line x1="10" y1="50" x2="90" y2="50" stroke="#3f51b5" />
+                    <polyline points="80,40 90,50 80,60" stroke="#3f51b5" />
+                </svg>
+                <div class="token-label">hindurch</div>
+            </div>
+
+            <!-- Symbol 2: Überqueren (Brücke) -> PERE -->
+            <div class="token" draggable="true" data-prefix="pere">
+                <svg viewBox="0 0 100 100">
+                    <!-- Hindernis/Fluss -->
+                    <line x1="10" y1="70" x2="90" y2="70" stroke="#888" stroke-width="5"/>
+                    <!-- Pfeil drüber -->
+                    <path d="M 20 70 Q 50 10 80 70" stroke="#3f51b5" fill="none"/>
+                    <polyline points="70,60 80,70 85,60" stroke="#3f51b5" />
+                </svg>
+                <div class="token-label">überqueren</div>
+            </div>
+
+            <!-- Symbol 3: Vorbeigehen (Punkt) -> PRO -->
+            <div class="token" draggable="true" data-prefix="pro">
+                <svg viewBox="0 0 100 100">
+                    <!-- Objekt -->
+                    <circle cx="50" cy="30" r="10" fill="#888" stroke="none"/>
+                    <!-- Pfeil vorbei -->
+                    <path d="M 20 80 L 80 80" stroke="#3f51b5"/>
+                    <polyline points="70,70 80,80 70,90" stroke="#3f51b5" />
+                </svg>
+                <div class="token-label">vorbei</div>
+            </div>
+
+            <!-- Symbol 4: Kreuzen (Straße) -> PERE -->
+            <div class="token" draggable="true" data-prefix="pere">
+                <svg viewBox="0 0 100 100">
+                    <!-- Straße -->
+                    <line x1="40" y1="10" x2="40" y2="90" stroke="#888"/>
+                    <line x1="60" y1="10" x2="60" y2="90" stroke="#888"/>
+                    <!-- Pfeil kreuzt -->
+                    <line x1="10" y1="50" x2="90" y2="50" stroke="#3f51b5" />
+                    <polyline points="80,40 90,50 80,60" stroke="#3f51b5" />
+                </svg>
+                <div class="token-label">kreuzen</div>
+            </div>
+
+            <!-- Symbol 5: Distanz (Meter) -> PRO -->
+            <div class="token" draggable="true" data-prefix="pro">
+                <svg viewBox="0 0 100 100">
+                    <!-- Maßband -->
+                    <line x1="10" y1="50" x2="90" y2="50" stroke="#888" stroke-dasharray="2,2"/>
+                    <line x1="10" y1="40" x2="10" y2="60" stroke="#888"/>
+                    <line x1="90" y1="40" x2="90" y2="60" stroke="#888"/>
+                    <text x="35" y="40" font-size="12" stroke="none" fill="#888">1 km</text>
+                    <!-- Pfeil -->
+                    <path d="M 15 65 L 85 65" stroke="#3f51b5"/>
+                    <polyline points="75,55 85,65 75,75" stroke="#3f51b5" />
+                </svg>
+                <div class="token-label">Distanz</div>
+            </div>
+
+            <!-- Symbol 6: Wechseln (Haus A zu B) -> PERE -->
+            <div class="token" draggable="true" data-prefix="pere">
+                <svg viewBox="0 0 100 100">
+                    <!-- Haus A -->
+                    <rect x="10" y="50" width="20" height="20" stroke="#888"/>
+                    <!-- Haus B -->
+                    <rect x="70" y="50" width="20" height="20" stroke="#888"/>
+                    <!-- Pfeil Bogen -->
+                    <path d="M 20 50 Q 50 10 80 50" stroke="#3f51b5" fill="none"/>
+                    <polyline points="72,40 80,50 88,40" stroke="#3f51b5" />
+                </svg>
+                <div class="token-label">wechseln</div>
+            </div>
+
+        </div>
+
+        <!-- Ziele -->
+        <div class="target-area">
+            
+            <div class="drop-zone" id="zone-pro" data-accept="pro">
+                <h3>ПРО-<br><span style="font-size:0.8rem; font-weight:normal;">(durch / vorbei / Distanz)</span></h3>
+            </div>
+
+            <div class="drop-zone" id="zone-pere" data-accept="pere">
+                <h3>ПЕРЕ-<br><span style="font-size:0.8rem; font-weight:normal;">(über / quer / wechseln)</span></h3>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-check" onclick="checkAnswers()">Überprüfen</button>
+        <button class="btn-reset" onclick="resetGame()">Zurücksetzen</button>
+        <button class="btn-solve" onclick="solveGame()">Lösung anzeigen</button>
+    </div>
+</div>
+
+<script>
+    // --- DRAG & DROP LOGIK ---
+    const draggables = document.querySelectorAll('.token');
+    const dropZones = document.querySelectorAll('.drop-zone, .source-container');
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+            draggable.classList.add('dragging');
+        });
+
+        draggable.addEventListener('dragend', () => {
+            draggable.classList.remove('dragging');
+        });
+    });
+
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Erlaubt das Droppen
+            zone.classList.add('drag-over');
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const draggable = document.querySelector('.dragging');
+            if(draggable) {
+                zone.appendChild(draggable);
+                // Reset styling bei Drop
+                draggable.classList.remove('correct', 'wrong');
+            }
+        });
+    });
+
+    // --- BUTTON FUNKTIONEN ---
+
+    function checkAnswers() {
+        // Zonen prüfen
+        const zones = document.querySelectorAll('.drop-zone');
+        
+        zones.forEach(zone => {
+            const acceptType = zone.dataset.accept;
+            const tokens = zone.querySelectorAll('.token');
+            
+            tokens.forEach(token => {
+                if(token.dataset.prefix === acceptType) {
+                    token.classList.add('correct');
+                    token.classList.remove('wrong');
+                } else {
+                    token.classList.add('wrong');
+                    token.classList.remove('correct');
+                }
+            });
+        });
+        
+        // Quelle prüfen (optional: alles was noch in Quelle ist, ist unmarkiert)
+        const sourceTokens = document.getElementById('source').querySelectorAll('.token');
+        sourceTokens.forEach(t => t.classList.remove('correct', 'wrong'));
+    }
+
+    function resetGame() {
+        const source = document.getElementById('source');
+        const tokens = document.querySelectorAll('.token');
+        
+        // Alle Tokens zurück in die Quelle und mischen
+        // (Einfaches Anhängen reicht hier als "Mischen" durch User-Interaktion)
+        tokens.forEach(token => {
+            token.classList.remove('correct', 'wrong');
+            source.appendChild(token);
+        });
+    }
+
+    function solveGame() {
+        const tokens = document.querySelectorAll('.token');
+        const zonePro = document.getElementById('zone-pro');
+        const zonePere = document.getElementById('zone-pere');
+        
+        tokens.forEach(token => {
+            token.classList.remove('wrong');
+            token.classList.add('correct');
+            
+            if(token.dataset.prefix === 'pro') {
+                zonePro.appendChild(token);
+            } else {
+                zonePere.appendChild(token);
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

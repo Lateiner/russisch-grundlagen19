@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synonym-Findung: Deutsch - Russisch</title>
+    <!-- WICHTIG: Polyfill für Touch-Geräte -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-light: #c5cae9;
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --bg: #f4f4f9;
+            --card-bg: #ffffff;
+            --text: #333;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+            overscroll-behavior-y: contain; /* Verhindert Scrollen beim Draggen */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- WORT POOL (DEUTSCH) --- */
+        .pool-area {
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 100px;
+            border: 2px dashed #bbb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        /* --- DRAGGABLE ITEMS (DEUTSCH) --- */
+        .word-item {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background-color 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .word-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        /* Feedback Farben */
+        .word-item.correct {
+            background-color: var(--correct);
+            border: 2px solid #2e7d32;
+        }
+
+        .word-item.wrong {
+            background-color: var(--wrong);
+            border: 2px solid #c62828;
+        }
+
+        /* --- ZIEL GRID (RUSSISCH) --- */
+        .target-grid {
+            display: grid;
+            /* Automatisch anpassendes Grid: Desktop mehrspaltig, Handy einspaltig */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .drop-slot {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-bottom: 4px solid var(--primary);
+            min-height: 120px; /* Platz für das Wort */
+            transition: background-color 0.2s;
+        }
+
+        .drop-slot.drag-over {
+            background-color: var(--primary-light);
+        }
+
+        .russian-term {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .term-hint {
+            font-size: 0.85rem;
+            color: #777;
+            margin-bottom: 15px;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Platzhalter Bereich innerhalb des Slots */
+        .slot-zone {
+            width: 100%;
+            flex-grow: 1;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            background-color: #fafafa;
+        }
+
+        /* --- STEUERUNG --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            min-width: 140px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #757575; }
+        .btn-solve { background-color: #009688; }
+        
+        button:hover { opacity: 0.9; }
+
+        /* --- MOBILE ANPASSUNG --- */
+        @media (max-width: 600px) {
+            .word-item {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            .target-grid {
+                grid-template-columns: 1fr; /* Streng 1 Spalte auf Handy */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Synonym-Findung</h1>
+    <p class="instruction">
+        Finde das passende deutsche Synonym.<br>
+        Ziehe das deutsche Wort in das Feld mit dem passenden russischen Verb.
+    </p>
+
+    <!-- DEUTSCHER POOL -->
+    <div class="pool-area" id="word-pool">
+        <div class="word-item" draggable="true" data-match="1">umziehen (Wohnung)</div>
+        <div class="word-item" draggable="true" data-match="2">vorbeigehen</div>
+        <div class="word-item" draggable="true" data-match="3">überqueren (zu Fuß)</div>
+        <div class="word-item" draggable="true" data-match="4">durchqueren / hindurchgehen</div>
+        <div class="word-item" draggable="true" data-match="5">Distanz zurücklegen</div>
+        <div class="word-item" draggable="true" data-match="6">überqueren (Fahrzeug)</div>
+    </div>
+
+    <!-- RUSSISCHES GRID -->
+    <div class="target-grid">
+        
+        <!-- Slot 1 -->
+        <div class="drop-slot">
+            <div class="russian-term">переезжать</div>
+            <div class="term-hint">(z.B. in eine neue Stadt)</div>
+            <div class="slot-zone" data-match="1"></div>
+        </div>
+
+        <!-- Slot 2 -->
+        <div class="drop-slot">
+            <div class="russian-term">проходить</div>
+            <div class="term-hint">(+ мимо + Gen.)</div>
+            <div class="slot-zone" data-match="2"></div>
+        </div>
+
+        <!-- Slot 3 -->
+        <div class="drop-slot">
+            <div class="russian-term">переходить</div>
+            <div class="term-hint">(+ Akk. / z.B. Straße)</div>
+            <div class="slot-zone" data-match="3"></div>
+        </div>
+
+        <!-- Slot 4 -->
+        <div class="drop-slot">
+            <div class="russian-term">проходить</div>
+            <div class="term-hint">(+ через + Akk.)</div>
+            <div class="slot-zone" data-match="4"></div>
+        </div>
+
+        <!-- Slot 5 -->
+        <div class="drop-slot">
+            <div class="russian-term">пройти</div>
+            <div class="term-hint">(z.B. 5 Kilometer)</div>
+            <div class="slot-zone" data-match="5"></div>
+        </div>
+
+        <!-- Slot 6 -->
+        <div class="drop-slot">
+            <div class="russian-term">переезжать</div>
+            <div class="term-hint">(z.B. eine Brücke mit Auto)</div>
+            <div class="slot-zone" data-match="6"></div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-check" onclick="checkPairs()">Überprüfen</button>
+        <button class="btn-reset" onclick="resetPairs()">Zurücksetzen</button>
+        <button class="btn-solve" onclick="solvePairs()">Lösung anzeigen</button>
+    </div>
+</div>
+
+<script>
+    // --- DRAG & DROP LOGIK ---
+    const items = document.querySelectorAll('.word-item');
+    // Drop Zones sind die .slot-zone und der .pool-area (fürs Zurücklegen)
+    const dropZones = document.querySelectorAll('.slot-zone, .pool-area');
+
+    items.forEach(item => {
+        item.addEventListener('dragstart', () => {
+            item.classList.add('dragging');
+        });
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+        });
+    });
+
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            // Visuelles Feedback nur für die kleinen Slots, nicht den großen Pool
+            if (zone.classList.contains('slot-zone')) {
+                zone.parentElement.classList.add('drag-over');
+            }
+        });
+
+        zone.addEventListener('dragleave', () => {
+            if (zone.classList.contains('slot-zone')) {
+                zone.parentElement.classList.remove('drag-over');
+            }
+        });
+
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (zone.classList.contains('slot-zone')) {
+                zone.parentElement.classList.remove('drag-over');
+            }
+            
+            const draggable = document.querySelector('.dragging');
+            if(draggable) {
+                // Logik: Wenn Slot schon voll ist, tauschen wir (optional) oder verhindern es.
+                // Hier: Einfaches Append. Wenn schon was drin ist, rutscht es daneben (Flexbox) 
+                // oder wir könnten das alte zurückwerfen. 
+                // Für Simple UX: Einfach reinlegen.
+                
+                // Reset styling
+                draggable.classList.remove('correct', 'wrong');
+                zone.appendChild(draggable);
+            }
+        });
+    });
+
+    // --- BUTTON FUNKTIONEN ---
+
+    function checkPairs() {
+        const slots = document.querySelectorAll('.slot-zone');
+        
+        slots.forEach(slot => {
+            const expectedId = slot.dataset.match;
+            const item = slot.querySelector('.word-item');
+            
+            if (item) {
+                if (item.dataset.match === expectedId) {
+                    item.classList.add('correct');
+                    item.classList.remove('wrong');
+                } else {
+                    item.classList.add('wrong');
+                    item.classList.remove('correct');
+                }
+            }
+        });
+    }
+
+    function resetPairs() {
+        const pool = document.getElementById('word-pool');
+        const items = document.querySelectorAll('.word-item');
+        
+        // Items mischen und zurücklegen
+        const itemsArray = Array.from(items);
+        itemsArray.sort(() => Math.random() - 0.5);
+        
+        itemsArray.forEach(item => {
+            item.classList.remove('correct', 'wrong');
+            pool.appendChild(item);
+        });
+    }
+
+    function solvePairs() {
+        const items = document.querySelectorAll('.word-item');
+        
+        items.forEach(item => {
+            const matchId = item.dataset.match;
+            // Finde den passenden Slot
+            const targetSlot = document.querySelector(`.slot-zone[data-match="${matchId}"]`);
+            
+            if (targetSlot) {
+                targetSlot.appendChild(item);
+                item.classList.remove('wrong');
+                item.classList.add('correct');
+            }
+        });
+    }
+
+    // Initiales Mischen
+    window.onload = resetPairs;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Choice: Präpositionen & Fälle</title>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-bg: #e8eaf6;
+            --correct: #4caf50;
+            --correct-light: #e8f5e9;
+            --wrong: #f44336;
+            --wrong-light: #ffebee;
+            --text: #333;
+            --bg: #f4f4f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- QUIZ KARTEN --- */
+        .quiz-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .verb-highlight {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* --- ANTWORT OPTIONS (Buttons statt Radio) --- */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Verstecke den echten Radio-Button */
+        .options input[type="radio"] {
+            display: none;
+        }
+
+        /* Style das Label als Button */
+        .option-label {
+            display: block;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .option-label:hover {
+            background-color: var(--primary-bg);
+            border-color: #c5cae9;
+        }
+
+        /* Wenn Radio gecheckt ist (User Auswahl) */
+        .options input[type="radio"]:checked + .option-label {
+            border-color: var(--primary);
+            background-color: var(--primary-bg);
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* --- FEEDBACK STYLES (LOGIK GEÄNDERT) --- */
+
+        /* 1. ÜBERPRÜFEN (.checked) */
+        
+        /* Wenn .checked aktiv ist und der User das RICHTIGE gewählt hat -> Grün */
+        .quiz-card.checked input[type="radio"]:checked + .option-label[data-status="correct"] {
+            background-color: var(--correct-light);
+            border-color: var(--correct);
+            color: #2e7d32;
+        }
+
+        /* Wenn .checked aktiv ist und der User das FALSCHE gewählt hat -> Rot */
+        .quiz-card.checked input[type="radio"]:checked + .option-label[data-status="wrong"] {
+            background-color: var(--wrong-light);
+            border-color: var(--wrong);
+            color: #c62828;
+            text-decoration: line-through;
+        }
+
+        /* 2. LÖSUNG ANZEIGEN (.revealed) */
+
+        /* Wenn .revealed aktiv ist -> IMMER das Richtige grün machen, egal was gewählt wurde */
+        .quiz-card.revealed .option-label[data-status="correct"] {
+            background-color: var(--correct-light) !important;
+            border-color: var(--correct) !important;
+            color: #2e7d32 !important;
+            font-weight: bold;
+        }
+
+        /* --- STEUERUNG --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 40px;
+            padding-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            min-width: 140px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #757575; }
+        .btn-solve { background-color: #009688; }
+        
+        button:hover { opacity: 0.9; }
+
+        /* --- MOBILE ANPASSUNG --- */
+        @media (min-width: 700px) {
+            .options {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .option-label {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Multiple Choice: Präpositionen & Fälle</h1>
+    <p class="instruction">
+        Wähle die richtige Endung oder Präposition, die zum Verb passt. <br>
+        Achte darauf, ob das Verb <strong>про-</strong> (vorbei/durch) oder <strong>пере-</strong> (über/wohin) enthält.
+    </p>
+
+    <!-- Frage 1 -->
+    <div class="quiz-card" id="q1">
+        <div class="question-text">1. Он <span class="verb-highlight">прошёл</span> ______________ . (vorbei)</div>
+        <div class="options">
+            
+            <input type="radio" name="q1" id="q1a">
+            <label class="option-label" for="q1a" data-status="correct">мимо магазина</label>
+            
+            <input type="radio" name="q1" id="q1b">
+            <label class="option-label" for="q1b" data-status="wrong">магазин</label>
+            
+            <input type="radio" name="q1" id="q1c">
+            <label class="option-label" for="q1c" data-status="wrong">на магазин</label>
+            
+        </div>
+    </div>
+
+    <!-- Frage 2 -->
+    <div class="quiz-card" id="q2">
+        <div class="question-text">2. Мы <span class="verb-highlight">переехали</span> ______________ . (in eine neue Wohnung)</div>
+        <div class="options">
+            
+            <input type="radio" name="q2" id="q2a">
+            <label class="option-label" for="q2a" data-status="wrong">в новой квартире</label>
+            
+            <input type="radio" name="q2" id="q2b">
+            <label class="option-label" for="q2b" data-status="correct">в новую квартиру</label>
+            
+            <input type="radio" name="q2" id="q2c">
+            <label class="option-label" for="q2c" data-status="wrong">новая квартира</label>
+            
+        </div>
+    </div>
+
+    <!-- Frage 3 -->
+    <div class="quiz-card" id="q3">
+        <div class="question-text">3. Она сейчас <span class="verb-highlight">переходит</span> ______________ . (die Straße)</div>
+        <div class="options">
+            
+            <input type="radio" name="q3" id="q3a">
+            <label class="option-label" for="q3a" data-status="wrong">улицы</label>
+            
+            <input type="radio" name="q3" id="q3b">
+            <label class="option-label" for="q3b" data-status="wrong">через улицей</label>
+            
+            <input type="radio" name="q3" id="q3c">
+            <label class="option-label" for="q3c" data-status="correct">улицу</label>
+            
+        </div>
+    </div>
+
+    <!-- Frage 4 -->
+    <div class="quiz-card" id="q4">
+        <div class="question-text">4. Туристы <span class="verb-highlight">прошли</span> ______________ . (durch den Wald)</div>
+        <div class="options">
+            
+            <input type="radio" name="q4" id="q4a">
+            <label class="option-label" for="q4a" data-status="correct">через лес</label>
+            
+            <input type="radio" name="q4" id="q4b">
+            <label class="option-label" for="q4b" data-status="wrong">лесом</label>
+            
+            <input type="radio" name="q4" id="q4c">
+            <label class="option-label" for="q4c" data-status="wrong">мимо леса</label>
+            
+        </div>
+    </div>
+
+    <!-- Frage 5 -->
+    <div class="quiz-card" id="q5">
+        <div class="question-text">5. Я <span class="verb-highlight">прошёл</span> ______________ . (zwei Kilometer)</div>
+        <div class="options">
+            
+            <input type="radio" name="q5" id="q5a">
+            <label class="option-label" for="q5a" data-status="wrong">два километров</label>
+            
+            <input type="radio" name="q5" id="q5b">
+            <label class="option-label" for="q5b" data-status="correct">два километра</label>
+            
+            <input type="radio" name="q5" id="q5c">
+            <label class="option-label" for="q5c" data-status="wrong">в два километра</label>
+            
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-check" onclick="checkAnswers()">Überprüfen</button>
+        <button class="btn-reset" onclick="resetQuiz()">Zurücksetzen</button>
+        <button class="btn-solve" onclick="solveQuiz()">Lösung anzeigen</button>
+    </div>
+</div>
+
+<script>
+    function checkAnswers() {
+        const cards = document.querySelectorAll('.quiz-card');
+        
+        cards.forEach(card => {
+            // "checked" zeigt Feedback nur für die Auswahl des Users (Rot oder Grün)
+            // Es zeigt NICHT die richtige Lösung, wenn man falsch lag.
+            card.classList.remove('revealed');
+            card.classList.add('checked');
+        });
+    }
+
+    function resetQuiz() {
+        const cards = document.querySelectorAll('.quiz-card');
+        const radios = document.querySelectorAll('input[type="radio"]');
+        
+        // CSS Klassen entfernen
+        cards.forEach(card => {
+            card.classList.remove('checked');
+            card.classList.remove('revealed');
+        });
+        
+        // Radio Buttons deselektieren
+        radios.forEach(radio => radio.checked = false);
+    }
+
+    function solveQuiz() {
+        const cards = document.querySelectorAll('.quiz-card');
+        
+        cards.forEach(card => {
+            card.classList.remove('checked');
+            card.classList.add('revealed'); // Zeigt die korrekte Lösung (Grün)
+            
+            // Optional: Richtige Antwort automatisch auswählen
+            const correctLabel = card.querySelector('.option-label[data-status="correct"]');
+            const correctInputId = correctLabel.getAttribute('for');
+            document.getElementById(correctInputId).checked = true;
+        });
+    }
+</script>
+
+</body>
+</html>

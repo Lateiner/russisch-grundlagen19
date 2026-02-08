@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategorisierung: ПРО- vs. ПЕРЕ- (10 Beispiele)</title>
+    <!-- WICHTIG: Polyfill für Touch-Geräte (Smartphone/Tablet) -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-bg: #e8eaf6;
+            --correct: #4caf50;
+            --correct-light: #e8f5e9;
+            --wrong: #f44336;
+            --wrong-light: #ffebee;
+            --text: #333;
+            --bg: #f4f4f9;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+            /* Verhindert Pull-to-Refresh beim Draggen auf Mobile */
+            overscroll-behavior-y: contain;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- SPIELFELD --- */
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- QUELLE (Wortpool) --- */
+        .source-container {
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 120px; /* Etwas höher für mehr Items */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            border: 2px dashed #bbb;
+        }
+
+        /* --- ZIEL ZONEN (Spalten) --- */
+        .target-wrapper {
+            display: flex;
+            gap: 20px;
+        }
+
+        .drop-column {
+            flex: 1;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 400px; /* Höher, damit 10 Items Platz haben */
+            box-shadow: var(--shadow);
+            border-top: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .drop-column h2 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .drop-column p {
+            margin: 0 0 20px 0;
+            font-size: 0.9rem;
+            color: #777;
+            text-align: center;
+        }
+
+        .drop-column.drag-over {
+            background-color: var(--primary-bg);
+        }
+
+        /* --- DRAGGABLE ITEMS --- */
+        .item {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: grab;
+            user-select: none;
+            touch-action: none; /* Wichtig für Touch Performance */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background-color 0.3s;
+            margin: 3px;
+            text-align: center;
+        }
+
+        .item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        /* Feedback Styles */
+        .item.correct {
+            background-color: var(--correct);
+            border: 2px solid #2e7d32;
+        }
+
+        .item.wrong {
+            background-color: var(--wrong);
+            border: 2px solid #c62828;
+        }
+
+        /* --- STEUERUNG --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            min-width: 140px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #757575; }
+        .btn-solve { background-color: #009688; }
+        
+        button:hover { opacity: 0.9; }
+
+        /* --- MOBILE RESPONSIVITÄT --- */
+        @media (max-width: 700px) {
+            .target-wrapper {
+                flex-direction: column; /* Spalten untereinander */
+            }
+            
+            .drop-column {
+                min-height: 200px;
+                width: 100%; /* Volle Breite nutzen */
+                box-sizing: border-box; /* Padding einrechnen */
+            }
+            
+            .item {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Aktions-Sortierung (10 Beispiele)</h1>
+    <p class="instruction">
+        Welches Präfix passt zu welcher Phrase?<br>
+        Ziehe die Wörter in die richtige Spalte: <strong>ПРО-</strong> oder <strong>ПЕРЕ-</strong>.
+    </p>
+
+    <div class="game-board">
+        
+        <!-- QUELLE (10 Items) -->
+        <div class="source-container" id="source">
+            
+            <!-- Items für PERE- (Überqueren/Wechseln) -->
+            <div class="item" draggable="true" data-target="pere">die Straße (überqueren)</div>
+            <div class="item" draggable="true" data-target="pere">in eine neue Stadt (ziehen)</div>
+            <div class="item" draggable="true" data-target="pere">die Grenze (überqueren)</div>
+            <div class="item" draggable="true" data-target="pere">über die Brücke (gehen)</div>
+            <div class="item" draggable="true" data-target="pere">in eine neue Wohnung (ziehen)</div>
+
+            <!-- Items für PRO- (Vorbei/Durch/Distanz) -->
+            <div class="item" draggable="true" data-target="pro">am Haus vorbei</div>
+            <div class="item" draggable="true" data-target="pro">100 Meter (Distanz)</div>
+            <div class="item" draggable="true" data-target="pro">durch den Tunnel</div>
+            <div class="item" draggable="true" data-target="pro">5 Kilometer (laufen)</div>
+            <div class="item" draggable="true" data-target="pro">durch den Wald</div>
+
+        </div>
+
+        <!-- ZIELE -->
+        <div class="target-wrapper">
+            
+            <!-- Spalte PRO -->
+            <div class="drop-column" id="zone-pro" data-category="pro">
+                <h2>ПРО-</h2>
+                <p>durch / vorbei / Distanz</p>
+                <!-- Hier landen die Items -->
+            </div>
+
+            <!-- Spalte PERE -->
+            <div class="drop-column" id="zone-pere" data-category="pere">
+                <h2>ПЕРЕ-</h2>
+                <p>überqueren / wechseln</p>
+                <!-- Hier landen die Items -->
+            </div>
+
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-check" onclick="checkSorting()">Überprüfen</button>
+        <button class="btn-reset" onclick="resetSorting()">Zurücksetzen</button>
+        <button class="btn-solve" onclick="solveSorting()">Lösung anzeigen</button>
+    </div>
+</div>
+
+<script>
+    // --- DRAG & DROP LOGIC ---
+    const items = document.querySelectorAll('.item');
+    const zones = document.querySelectorAll('.drop-column, .source-container');
+
+    items.forEach(item => {
+        item.addEventListener('dragstart', () => {
+            item.classList.add('dragging');
+        });
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+        });
+    });
+
+    zones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (zone.classList.contains('drop-column')) {
+                zone.classList.add('drag-over');
+            }
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const draggable = document.querySelector('.dragging');
+            if(draggable) {
+                zone.appendChild(draggable);
+                // Reset Feedback Status beim Bewegen
+                draggable.classList.remove('correct', 'wrong');
+            }
+        });
+    });
+
+    // --- BUTTON FUNCTIONS ---
+
+    function checkSorting() {
+        const columns = document.querySelectorAll('.drop-column');
+        
+        columns.forEach(col => {
+            const expectedCategory = col.dataset.category;
+            const children = col.querySelectorAll('.item');
+            
+            children.forEach(item => {
+                if (item.dataset.target === expectedCategory) {
+                    item.classList.add('correct');
+                    item.classList.remove('wrong');
+                } else {
+                    item.classList.add('wrong');
+                    item.classList.remove('correct');
+                }
+            });
+        });
+        
+        // Items in der Quelle zurücksetzen
+        const sourceItems = document.getElementById('source').querySelectorAll('.item');
+        sourceItems.forEach(i => i.classList.remove('correct', 'wrong'));
+    }
+
+    function resetSorting() {
+        const source = document.getElementById('source');
+        const allItems = document.querySelectorAll('.item');
+        
+        // Alle Items zurück zur Quelle
+        allItems.forEach(item => {
+            item.classList.remove('correct', 'wrong');
+            source.appendChild(item);
+        });
+        
+        // Optional: Quelle mischen (damit sie nicht sortiert bleiben)
+        for (let i = source.children.length; i >= 0; i--) {
+            source.appendChild(source.children[Math.random() * i | 0]);
+        }
+    }
+
+    function solveSorting() {
+        const allItems = document.querySelectorAll('.item');
+        const zonePro = document.getElementById('zone-pro');
+        const zonePere = document.getElementById('zone-pere');
+        
+        allItems.forEach(item => {
+            // Visuelles Feedback
+            item.classList.remove('wrong');
+            item.classList.add('correct');
+            
+            // Verschieben
+            if (item.dataset.target === 'pro') {
+                zonePro.appendChild(item);
+            } else {
+                zonePere.appendChild(item);
+            }
+        });
+    }
+
+    // Beim Laden einmal mischen
+    window.onload = function() {
+        const source = document.getElementById('source');
+        for (let i = source.children.length; i >= 0; i--) {
+            source.appendChild(source.children[Math.random() * i | 0]);
+        }
+    };
+</script>
+
+</body>
+</html>

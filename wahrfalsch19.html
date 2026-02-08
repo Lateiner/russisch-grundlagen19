@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logik-Check: Wahr oder Falsch?</title>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-light: #e8eaf6;
+            --correct: #4caf50;
+            --wrong: #f44336;
+            --text: #333;
+            --bg: #f4f4f9;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px; /* Etwas breiter für mehr Karten */
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- GRID LAYOUT FÜR KARTEN --- */
+        .card-grid {
+            display: grid;
+            /* Passt sich automatisch an: 1 Spalte Handy, 2 Tablet, 3 Desktop */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* --- KARTE DESIGN --- */
+        .logic-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-top: 5px solid #ccc; /* Neutraler Start-Border */
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .logic-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .sentence {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--text);
+        }
+
+        .context {
+            font-size: 0.95rem;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        /* --- WAHR / FALSCH BUTTONS --- */
+        .choice-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-choice {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: #555;
+        }
+
+        .btn-choice:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        /* Ausgewählter Zustand (User klickt) */
+        .btn-choice.selected {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* --- FEEDBACK STYLES --- */
+        /* Richtig geraten */
+        .logic-card.feedback-correct {
+            border-top-color: var(--correct);
+        }
+        .logic-card.feedback-correct .btn-choice.selected {
+            background-color: var(--correct);
+            border-color: var(--correct);
+        }
+
+        /* Falsch geraten */
+        .logic-card.feedback-wrong {
+            border-top-color: var(--wrong);
+        }
+        .logic-card.feedback-wrong .btn-choice.selected {
+            background-color: var(--wrong);
+            border-color: var(--wrong);
+        }
+
+        /* --- ERKLÄRUNG (Versteckt bis Check) --- */
+        .explanation {
+            display: none;
+            font-size: 0.9rem;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 6px;
+            color: #444;
+            margin-top: auto; /* Schiebt Box nach unten */
+        }
+        
+        .explanation strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* --- STEUERUNG --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 40px;
+            padding-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button.ctrl-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            min-width: 140px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-check { background-color: var(--primary); }
+        .btn-reset { background-color: #757575; }
+        .btn-solve { background-color: #009688; }
+        
+        button.ctrl-btn:hover { opacity: 0.9; }
+
+        /* --- MOBILE ANPASSUNG --- */
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .card-grid { grid-template-columns: 1fr; } /* 1 Spalte */
+            .btn-choice { font-size: 1.1rem; padding: 15px; } /* Größere Touch-Ziele */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Logik-Check: Semantik</h1>
+    <p class="instruction">
+        Ist der Satz logisch korrekt? Stimmt das Verb mit der Situation überein?<br>
+        Klicke auf <strong>WAHR</strong> (logisch korrekt) oder <strong>FALSCH</strong> (logischer Fehler).
+    </p>
+
+    <div class="card-grid">
+
+        <!-- Karte 1 -->
+        <div class="logic-card" data-correct="false">
+            <div class="sentence">«Я проехал в новый дом.»</div>
+            <div class="context">Situation: Jemand ist umgezogen.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: FALSCH</strong>
+                "Проехать" heißt "vorbeifahren". Für einen Umzug (Wohnungswechsel) muss man "переехать" benutzen.
+            </div>
+        </div>
+
+        <!-- Karte 2 -->
+        <div class="logic-card" data-correct="true">
+            <div class="sentence">«Мы прошли 20 километров.»</div>
+            <div class="context">Situation: Eine Wanderung über eine lange Distanz.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: WAHR</strong>
+                "Пройти" wird benutzt, um eine zurückgelegte Distanz zu beschreiben (wie viele Meter/km).
+            </div>
+        </div>
+
+        <!-- Karte 3 -->
+        <div class="logic-card" data-correct="false">
+            <div class="sentence">«Она перешла мимо магазина.»</div>
+            <div class="context">Situation: Sie hat den Laden gesehen, ist aber weitergegangen.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: FALSCH</strong>
+                "Перешла" bedeutet "überqueren". Das Wort "мимо" (vorbei) verlangt zwingend "прошла".
+            </div>
+        </div>
+
+        <!-- Karte 4 -->
+        <div class="logic-card" data-correct="true">
+            <div class="sentence">«Автобус проехал через мост.»</div>
+            <div class="context">Situation: Der Bus fuhr von einer Seite des Flusses auf die andere.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: WAHR</strong>
+                Das ist korrekt. "Проехать через" betont die Bewegung durch/über ein Objekt hindurch.
+            </div>
+        </div>
+
+        <!-- Karte 5 -->
+        <div class="logic-card" data-correct="false">
+            <div class="sentence">«Он перешёл через лес.»</div>
+            <div class="context">Situation: Er war lange im Wald, ging hindurch und kam heraus.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: FALSCH</strong>
+                Für eine Bewegung "durch" einen Raum (innen drin sein) benutzt man "прошёл через". "Перешёл" nutzt man eher für das Überqueren von Linien (Straße, Grenze).
+            </div>
+        </div>
+
+        <!-- Karte 6 (NEU) -->
+        <div class="logic-card" data-correct="false">
+            <div class="sentence">«Спортсмен перешёл 100 метров.»</div>
+            <div class="context">Situation: Er ist 100 Meter weit gelaufen.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: FALSCH</strong>
+                Bei Distanzangaben (Meter, Kilometer) benutzen wir "прошёл" (zurücklegen), nicht "перешёл".
+            </div>
+        </div>
+
+        <!-- Karte 7 (NEU) -->
+        <div class="logic-card" data-correct="true">
+            <div class="sentence">«Моя семья переехала в Берлин.»</div>
+            <div class="context">Situation: Sie wohnen jetzt in einer anderen Stadt.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: WAHR</strong>
+                Korrekt! "Переехать" bedeutet hier "umziehen" (Wohnort oder Stadt wechseln).
+            </div>
+        </div>
+
+        <!-- Karte 8 (NEU) -->
+        <div class="logic-card" data-correct="false">
+            <div class="sentence">«Такси переехало мимо отеля.»</div>
+            <div class="context">Situation: Das Taxi hat nicht angehalten und ist weitergefahren.</div>
+            
+            <div class="choice-container">
+                <button class="btn-choice" onclick="select(this, 'true')">WAHR</button>
+                <button class="btn-choice" onclick="select(this, 'false')">FALSCH</button>
+            </div>
+            
+            <div class="explanation">
+                <strong>Lösung: FALSCH</strong>
+                "Мимо" (vorbei) funktioniert nur mit "про-". Der Satz muss heißen: "Такси проехало мимо отеля."
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="ctrl-btn btn-check" onclick="checkAnswers()">Überprüfen</button>
+        <button class="ctrl-btn btn-reset" onclick="resetGame()">Zurücksetzen</button>
+        <button class="ctrl-btn btn-solve" onclick="solveGame()">Lösung anzeigen</button>
+    </div>
+</div>
+
+<script>
+    // Auswahl Logik
+    function select(btn, value) {
+        // Finde die Eltern-Karte
+        const card = btn.closest('.logic-card');
+        const buttons = card.querySelectorAll('.btn-choice');
+        
+        // Reset Auswahl in dieser Karte
+        buttons.forEach(b => b.classList.remove('selected'));
+        
+        // Neue Auswahl setzen
+        btn.classList.add('selected');
+        // Speichere die User-Antwort im Dataset der Karte
+        card.dataset.userChoice = value;
+        
+        // Entferne altes Feedback falls vorhanden (falls User nach Check korrigiert)
+        card.classList.remove('feedback-correct', 'feedback-wrong');
+        card.querySelector('.explanation').style.display = 'none';
+    }
+
+    // Überprüfen Logik
+    function checkAnswers() {
+        const cards = document.querySelectorAll('.logic-card');
+        
+        cards.forEach(card => {
+            const userChoice = card.dataset.userChoice;
+            const correctChoice = card.dataset.correct;
+            const explanation = card.querySelector('.explanation');
+
+            if (!userChoice) return; // Nichts ausgewählt
+
+            if (userChoice === correctChoice) {
+                card.classList.add('feedback-correct');
+            } else {
+                card.classList.add('feedback-wrong');
+                // Zeige Erklärung nur an, wenn falsch geraten wurde (Lerneffekt)
+                explanation.style.display = 'block';
+            }
+        });
+    }
+
+    // Zurücksetzen
+    function resetGame() {
+        const cards = document.querySelectorAll('.logic-card');
+        cards.forEach(card => {
+            card.classList.remove('feedback-correct', 'feedback-wrong');
+            delete card.dataset.userChoice;
+            
+            // Buttons reset
+            card.querySelectorAll('.btn-choice').forEach(b => b.classList.remove('selected'));
+            
+            // Erklärung verstecken
+            card.querySelector('.explanation').style.display = 'none';
+        });
+    }
+
+    // Lösung anzeigen
+    function solveGame() {
+        const cards = document.querySelectorAll('.logic-card');
+        cards.forEach(card => {
+            const correctVal = card.dataset.correct; // "true" oder "false"
+            
+            // Zeige Erklärung
+            card.querySelector('.explanation').style.display = 'block';
+            
+            // Buttons visuell erzwingen
+            const buttons = card.querySelectorAll('.btn-choice');
+            buttons.forEach(btn => {
+                // Wir prüfen, ob der Button zum korrekten Wert passt
+                if(btn.getAttribute('onclick').includes(`'${correctVal}'`)) {
+                    btn.classList.add('selected');
+                    card.classList.add('feedback-correct');
+                    card.classList.remove('feedback-wrong');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
